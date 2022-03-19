@@ -105,7 +105,7 @@ int newline_checker(char *str) // check newline
 {
 	int a = 0;
 
-	while(a != buf_size)
+	while(str[a] != 0)
 	{	
 		if (str[a] == '\n')
 		{
@@ -115,32 +115,64 @@ int newline_checker(char *str) // check newline
 	}
 	return (0);
 }
+
+char *ret(int fd)
+{
+	size_t size;
+	int chkr = 0;
+	char *retline;
+	char *buf = malloc((buf_size + 1) * sizeof(char));
+
+	while(size > 0 && chkr == 0)
+	{
+		size = read(fd,buf,buf_size);
+		chkr = newline_checker(buf);
+		retline = ft_strjoin(retline, buf);
+	}
+	return retline;
+}
+char *stash2(char *s, int size) // returning string until newline
+{
+	int a = 0;
+	int s_size = ft_strlen(s);
+	char *str = malloc(s_size * sizeof(char));
+	if(size == 0)
+		return s;
+	while(a < size)
+	{
+		str[a] = s[a];
+		a++;	
+	}
+	str[s_size + 1] = '\0';
+	return str;
+}
 char *get_next_line(int fd)
 {
     char *buf = malloc((buf_size + 1) * sizeof(char));
 	static char *stash;
-    int chkr;
-    size_t size;
+    int chkr = 0;
 	char *line;
-	int a = 0;
+	char *stash3;
 
-    while(a < 5)
-    {
-        if(stash == 0 || *stash == '\0')
-		{
-            size = read(fd, buf, buf_size);
-            chkr = newline_checker(buf);
-            stash = ft_strdup(buf + chkr);
-        }
-        else
-		{
-			chkr = newline_checker(stash);
-            stash = ft_strdup(stash + chkr);
-		}
-		a++;
+	if(stash == 0 || *stash == '\0')
+	{
+		line = ret(fd);
     }
-    return stash;
+    else
+	{
+		chkr = newline_checker(stash);
+		stash3 = stash2(stash, chkr);
+		if (chkr > 0)
+			free(stash);
+		else
+			stash = ft_strdup(stash + chkr);
+	}
+	chkr = newline_checker(line);
+	stash = ft_strdup(line + chkr);
+	line = stash2(line,chkr);
+    return line;
 }
+/*
 int main (int arc, char *argv[])
 {
 	int fd;
@@ -149,9 +181,9 @@ int main (int arc, char *argv[])
 	printf("%s",get_next_line(fd));
 	return 0;
 }
+*/
 
 
-/*
 int main(int argc, char *argv[])
 {
         int fd;
@@ -185,4 +217,3 @@ int main(int argc, char *argv[])
 	}
         return 0;
 }
-*/
