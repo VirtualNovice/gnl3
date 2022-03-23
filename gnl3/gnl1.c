@@ -7,8 +7,7 @@
 #include <unistd.h>
 # define FD_MAX 256
 #include <string.h>
-#define buf_size 42
-
+#define buf_size 500
 
 void	ft_bzero(void *s, size_t n)
 {
@@ -120,15 +119,21 @@ char *ret(int fd)
 {
 	size_t size;
 	int chkr = 0;
-	char *retline;
 	char *buf = malloc((buf_size + 1) * sizeof(char));
+	char *retline = NULL;
 
 	while(size > 0 && chkr == 0)
 	{
 		size = read(fd,buf,buf_size);
 		chkr = newline_checker(buf);
-		retline = ft_strjoin(retline, buf);
+		buf[size] = '\0';
+		if (retline == 0)
+			retline = ft_strdup(buf);
+		else	
+			retline = ft_strjoin(retline, buf);
 	}
+	if (size == 0)
+		return NULL;
 	return retline;
 }
 char *stash2(char *s, int size) // returning string until newline
@@ -146,31 +151,46 @@ char *stash2(char *s, int size) // returning string until newline
 	str[s_size + 1] = '\0';
 	return str;
 }
+
 char *get_next_line(int fd)
 {
     char *buf = malloc((buf_size + 1) * sizeof(char));
 	static char *stash;
     int chkr = 0;
-	char *line;
+	char *last;
 	char *stash3;
-
-	if(stash == 0 || *stash == '\0')
+	while(fd > 0 || last != NULL)
 	{
-		line = ret(fd);
-    }
-    else
-	{
-		chkr = newline_checker(stash);
-		stash3 = stash2(stash, chkr);
-		if (chkr > 0)
-			free(stash);
+		if(stash == 0 || *stash == '\0')
+		{
+			last = ret(fd);
+			if (!last)
+				return NULL;
+		}
 		else
-			stash = ft_strdup(stash + chkr);
+		{
+			chkr = newline_checker(stash);
+			if (chkr > 0)
+			{
+				stash3 = stash2(stash, chkr);
+				last = ft_strdup(stash3);
+				stash = ft_strdup(stash + chkr);
+				stash3 = NULL;
+				return last;
+			}
+			else
+			{
+				last = ft_strjoin(stash,ret(fd));
+				stash = NULL;
+			}
+		}
+		chkr = newline_checker(last);
+		if (chkr > 0)
+			stash = ft_strdup(last + chkr);
+		last = stash2(last,chkr);
+		return last;
 	}
-	chkr = newline_checker(line);
-	stash = ft_strdup(line + chkr);
-	line = stash2(line,chkr);
-    return line;
+return NULL;	
 }
 /*
 int main (int arc, char *argv[])
